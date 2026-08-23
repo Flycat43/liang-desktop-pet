@@ -15,6 +15,7 @@
 
 - 透明无边框桌面窗口，不强制置顶
 - 左下角按钮可在人物桌宠与 Harness 完整界面之间双向切换
+- Harness 完整界面支持顶部拖动及关闭、最小化、放大或还原
 - 点击人物开关对话框，拖动人物移动窗口
 - 多会话创建、切换、删除和清空
 - 标准、PTC、极简、创造四种处理模式
@@ -68,8 +69,8 @@ npm run dist:linux
 仓库包含 GitHub Actions。推送版本标签后会在三个系统上构建，并把安装包上传到 GitHub Releases：
 
 ```bash
-git tag v0.1.3
-git push origin v0.1.3
+git tag v0.1.4
+git push origin v0.1.4
 ```
 
 默认构建未配置商业代码签名。macOS Gatekeeper 和 Windows SmartScreen 可能提示来源未知；正式分发时应配置 Apple Developer ID、公证和 Windows 代码签名证书。

@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld("liangPet", {
   dragMove: (point) => ipcRenderer.send("liang:drag-move", point),
   dragEnd: () => ipcRenderer.send("liang:drag-end"),
   focusWindow: () => ipcRenderer.send("liang:focus-window"),
+  minimizeWindow: () => ipcRenderer.send("liang:minimize-window"),
+  toggleMaximizeWindow: () => ipcRenderer.send("liang:toggle-maximize-window"),
   closeApp: () => ipcRenderer.send("liang:close-app"),
   onPartial: (callback) => ipcRenderer.on("liang:partial", (_event, text) => callback(text)),
   onStatus: (callback) => ipcRenderer.on("liang:status", (_event, text) => callback(text))

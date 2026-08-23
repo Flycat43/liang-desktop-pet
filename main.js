@@ -242,8 +242,12 @@ async function showHarnessInterface(url) {
 
 async function showPetInterface() {
   if (!petWindow || petWindow.isDestroyed()) return;
-  if (currentInterface === "harness") harnessWindowBounds = petWindow.getBounds();
+  if (currentInterface === "harness" && !petWindow.isMaximized() && !petWindow.isFullScreen()) {
+    harnessWindowBounds = petWindow.getBounds();
+  }
   currentInterface = "pet";
+  if (petWindow.isFullScreen()) petWindow.setFullScreen(false);
+  if (petWindow.isMaximized()) petWindow.unmaximize();
   petWindow.setMinimumSize(460, 520);
   if (petWindowBounds) petWindow.setBounds(petWindowBounds, true);
   petWindow.setTitle("Liang Desktop Pet");
@@ -256,47 +260,142 @@ async function showPetInterface() {
 function injectHarnessInterfaceToggle() {
   if (!petWindow || petWindow.isDestroyed()) return;
   petWindow.webContents.executeJavaScript(`(() => {
-    if (document.getElementById("liang-interface-toggle-host")) return;
-    const host = document.createElement("div");
-    host.id = "liang-interface-toggle-host";
-    host.style.cssText = "position:fixed;left:24px;bottom:72px;z-index:2147483647;width:48px;height:48px;";
-    const root = host.attachShadow({ mode: "open" });
-    root.innerHTML = \`
-      <style>
-        button {
-          display: grid;
-          width: 48px;
-          height: 48px;
-          padding: 0;
-          place-items: center;
-          border: 1px solid rgba(255, 255, 255, 0.24);
-          border-radius: 50%;
-          outline: 0;
-          background: rgba(20, 23, 27, 0.88);
-          color: #f7f2e7;
-          box-shadow: 0 14px 30px rgba(0, 0, 0, 0.38);
-          font: 800 26px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-          cursor: pointer;
-          backdrop-filter: blur(14px);
-          transition: transform 140ms ease, background 140ms ease;
+    if (!document.getElementById("liang-interface-toggle-host")) {
+      const host = document.createElement("div");
+      host.id = "liang-interface-toggle-host";
+      host.style.cssText = "position:fixed;left:24px;bottom:72px;z-index:2147483647;width:48px;height:48px;";
+      const root = host.attachShadow({ mode: "open" });
+      root.innerHTML = \`
+        <style>
+          button {
+            display: grid;
+            width: 48px;
+            height: 48px;
+            padding: 0;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            border-radius: 50%;
+            outline: 0;
+            background: rgba(20, 23, 27, 0.88);
+            color: #f7f2e7;
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.38);
+            font: 800 26px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            cursor: pointer;
+            backdrop-filter: blur(14px);
+            transition: transform 140ms ease, background 140ms ease;
+          }
+          button:hover { background: rgba(59, 130, 246, 0.94); transform: translateY(-1px); }
+          button:focus-visible { outline: 3px solid rgba(96, 165, 250, 0.72); outline-offset: 3px; }
+          button:disabled { cursor: wait; opacity: 0.68; }
+        </style>
+        <button type="button" aria-label="返回梁圣桌宠" title="返回梁圣桌宠">↶</button>
+      \`;
+      root.querySelector("button").addEventListener("click", async (event) => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        try {
+          await window.liangPet?.toggleInterface();
+        } catch (error) {
+          button.disabled = false;
+          button.title = error?.message || "无法返回桌宠界面";
         }
-        button:hover { background: rgba(59, 130, 246, 0.94); transform: translateY(-1px); }
-        button:focus-visible { outline: 3px solid rgba(96, 165, 250, 0.72); outline-offset: 3px; }
-        button:disabled { cursor: wait; opacity: 0.68; }
-      </style>
-      <button type="button" aria-label="返回梁圣桌宠" title="返回梁圣桌宠">↶</button>
-    \`;
-    root.querySelector("button").addEventListener("click", async (event) => {
-      const button = event.currentTarget;
-      button.disabled = true;
-      try {
-        await window.liangPet?.toggleInterface();
-      } catch (error) {
-        button.disabled = false;
-        button.title = error?.message || "无法返回桌宠界面";
-      }
-    });
-    document.documentElement.appendChild(host);
+      });
+      document.documentElement.appendChild(host);
+    }
+
+    if (!document.getElementById("liang-harness-window-chrome")) {
+      const chromeHost = document.createElement("div");
+      chromeHost.id = "liang-harness-window-chrome";
+      chromeHost.style.cssText = "position:fixed;inset:0 0 auto 0;z-index:2147483647;height:36px;pointer-events:none;";
+      const chromeRoot = chromeHost.attachShadow({ mode: "open" });
+      chromeRoot.innerHTML = \`
+        <style>
+          :host { color-scheme: dark; }
+          .controls {
+            position: absolute;
+            top: 10px;
+            left: 13px;
+            display: flex;
+            gap: 8px;
+            pointer-events: auto;
+          }
+          .window-button {
+            display: grid;
+            width: 15px;
+            height: 15px;
+            padding: 0;
+            place-items: center;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            border-radius: 50%;
+            color: rgba(28, 28, 30, 0.78);
+            box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.22);
+            font: 800 11px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            cursor: pointer;
+          }
+          .window-button.close { background: #ff5f57; }
+          .window-button.minimize { background: #febc2e; }
+          .window-button.maximize { background: #28c840; }
+          .window-button span { opacity: 0; transform: translateY(-0.5px); }
+          .controls:hover .window-button span,
+          .window-button:focus-visible span { opacity: 1; }
+          .window-button:focus-visible { outline: 2px solid rgba(96, 165, 250, 0.9); outline-offset: 2px; }
+          .drag-region {
+            position: absolute;
+            top: 0;
+            right: 230px;
+            left: 86px;
+            height: 34px;
+            pointer-events: auto;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+          }
+          .drag-region:active { cursor: grabbing; }
+          @media (max-width: 760px) {
+            .drag-region { right: 86px; }
+          }
+        </style>
+        <div class="controls" aria-label="窗口控制">
+          <button class="window-button close" type="button" data-action="close" aria-label="关闭" title="关闭"><span>×</span></button>
+          <button class="window-button minimize" type="button" data-action="minimize" aria-label="最小化" title="最小化"><span>−</span></button>
+          <button class="window-button maximize" type="button" data-action="maximize" aria-label="放大或还原" title="放大或还原"><span>+</span></button>
+        </div>
+        <div class="drag-region" role="toolbar" aria-label="拖动窗口" title="拖动窗口；双击放大或还原"></div>
+      \`;
+
+      const actions = {
+        close: () => window.liangPet?.closeApp(),
+        minimize: () => window.liangPet?.minimizeWindow(),
+        maximize: () => window.liangPet?.toggleMaximizeWindow()
+      };
+      chromeRoot.querySelectorAll("[data-action]").forEach((button) => {
+        button.addEventListener("click", () => actions[button.dataset.action]?.());
+      });
+
+      const dragRegion = chromeRoot.querySelector(".drag-region");
+      let activePointer = null;
+      dragRegion.addEventListener("pointerdown", (event) => {
+        if (event.button !== 0) return;
+        activePointer = event.pointerId;
+        try { dragRegion.setPointerCapture(event.pointerId); } catch {}
+        window.liangPet?.dragStart({ screenX: event.screenX, screenY: event.screenY });
+        event.preventDefault();
+      });
+      dragRegion.addEventListener("pointermove", (event) => {
+        if (event.pointerId !== activePointer) return;
+        window.liangPet?.dragMove({ screenX: event.screenX, screenY: event.screenY });
+      });
+      const finishDrag = (event) => {
+        if (activePointer === null || (event.pointerId !== undefined && event.pointerId !== activePointer)) return;
+        activePointer = null;
+        window.liangPet?.dragEnd();
+      };
+      dragRegion.addEventListener("pointerup", finishDrag);
+      dragRegion.addEventListener("pointercancel", finishDrag);
+      dragRegion.addEventListener("lostpointercapture", finishDrag);
+      dragRegion.addEventListener("dblclick", () => window.liangPet?.toggleMaximizeWindow());
+      document.documentElement.appendChild(chromeHost);
+    }
   })()`, true).catch(() => {});
 }
 
@@ -701,6 +800,17 @@ ipcMain.on("liang:focus-window", () => {
   if (!petWindow || petWindow.isDestroyed()) return;
   petWindow.show();
   petWindow.focus();
+});
+
+ipcMain.on("liang:minimize-window", () => {
+  if (!petWindow || petWindow.isDestroyed()) return;
+  petWindow.minimize();
+});
+
+ipcMain.on("liang:toggle-maximize-window", () => {
+  if (!petWindow || petWindow.isDestroyed()) return;
+  if (petWindow.isMaximized()) petWindow.unmaximize();
+  else petWindow.maximize();
 });
 
 ipcMain.on("liang:close-app", () => {
