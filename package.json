@@ -1,6 +1,6 @@
 {
   "name": "liang-desktop-pet",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "An unofficial desktop companion UI for DeepSeek Harness.",
   "license": "MIT",
@@ -15,10 +15,10 @@
   "scripts": {
     "start": "electron .",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder",
-    "dist:mac": "electron-builder --mac",
-    "dist:win": "electron-builder --win",
-    "dist:linux": "electron-builder --linux",
+    "dist": "electron-builder --publish never",
+    "dist:mac": "electron-builder --mac --publish never",
+    "dist:win": "electron-builder --win --publish never",
+    "dist:linux": "electron-builder --linux --publish never",
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
