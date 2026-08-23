@@ -1,0 +1,1793 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>梁圣桌面宠物</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+        color: #f7f2e7;
+        --liang-hue: #a78bfa;
+        --skin-fade-duration: 1800ms;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: visible;
+        background: transparent;
+      }
+
+      .app {
+        position: fixed;
+        inset: 0;
+      }
+
+      .pet-wrap {
+        position: absolute;
+        left: 50%;
+        bottom: 28px;
+        width: min(360px, calc(100vw - 40px));
+        height: 460px;
+        transform: translateX(-50%);
+      }
+
+      .pet {
+        position: absolute;
+        inset: 0;
+        cursor: pointer;
+        touch-action: none;
+        filter: drop-shadow(0 38px 56px rgba(0, 0, 0, 0.45));
+        transform-style: preserve-3d;
+        animation: idle 2.6s ease-in-out infinite alternate;
+      }
+
+      .skin-stage {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .pet-skin {
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        z-index: 1;
+        width: 100%;
+        height: 450px;
+        object-fit: contain;
+        object-position: center bottom;
+        opacity: 0;
+        pointer-events: none;
+        user-select: none;
+        transform: translateX(-50%) scale(var(--skin-scale, 1));
+        transform-origin: center bottom;
+        transition:
+          opacity var(--skin-fade-duration) cubic-bezier(0.4, 0, 0.2, 1),
+          bottom 160ms ease;
+        will-change: opacity;
+      }
+
+      .pet-skin.is-active {
+        z-index: 2;
+        opacity: 1;
+      }
+
+      .pet > .shadow,
+      .pet > .halo,
+      .pet > .plaque,
+      .pet > .head,
+      .pet > .arm,
+      .pet > .body {
+        display: none;
+      }
+
+      .halo {
+        position: absolute;
+        left: 50%;
+        top: 8%;
+        width: 78%;
+        height: 16%;
+        border: 10px solid var(--liang-hue);
+        border-radius: 50%;
+        transform: translateX(-50%) rotateX(68deg);
+        box-shadow: 0 0 54px color-mix(in srgb, var(--liang-hue) 72%, transparent);
+      }
+
+      .plaque {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        min-width: 196px;
+        padding: 12px 24px 15px;
+        border: 5px solid #20242a;
+        border-radius: 10px;
+        background: var(--liang-hue);
+        color: #20242a;
+        font-size: 62px;
+        line-height: 1;
+        font-weight: 950;
+        text-align: center;
+        transform: translateX(-50%) rotate(-3deg);
+        box-shadow: 0 22px 0 rgba(0, 0, 0, 0.36), 0 38px 62px rgba(0, 0, 0, 0.34);
+      }
+
+      .head {
+        position: absolute;
+        left: 50%;
+        top: 30%;
+        width: 142px;
+        height: 136px;
+        border-radius: 48% 48% 45% 45%;
+        background: radial-gradient(circle at 34% 24%, #ffe4c7, #f0c8a7 58%, #a86d55);
+        transform: translateX(-50%);
+        box-shadow: inset -16px -16px 26px rgba(83, 51, 38, 0.18), 0 20px 0 #7a5144;
+      }
+
+      .hair {
+        position: absolute;
+        inset: -7px -4px auto;
+        height: 54px;
+        border-radius: 78px 78px 21px 21px;
+        background: #20242a;
+      }
+
+      .glasses,
+      .glasses::before {
+        position: absolute;
+        top: 64px;
+        width: 38px;
+        height: 29px;
+        border: 5px solid #20242a;
+        border-radius: 50%;
+        content: "";
+      }
+
+      .glasses {
+        left: 27px;
+      }
+
+      .glasses::before {
+        top: -5px;
+        left: 51px;
+      }
+
+      .bridge {
+        position: absolute;
+        left: 66px;
+        top: 78px;
+        width: 20px;
+        height: 5px;
+        border-radius: 999px;
+        background: #20242a;
+      }
+
+      .mouth {
+        position: absolute;
+        left: 50%;
+        bottom: 25px;
+        width: 40px;
+        height: 16px;
+        border-bottom: 7px solid #ef4444;
+        border-radius: 0 0 999px 999px;
+        transform: translateX(-50%);
+      }
+
+      .body {
+        position: absolute;
+        left: 50%;
+        top: 56%;
+        width: 205px;
+        height: 174px;
+        border-radius: 48px 48px 30px 30px;
+        background: linear-gradient(145deg, #a78bfa, #4c1d95);
+        transform: translateX(-50%);
+        box-shadow: inset -22px -19px 32px rgba(0, 0, 0, 0.18), 0 28px 0 #2e1065;
+      }
+
+      .badge {
+        position: absolute;
+        left: 50%;
+        top: 40px;
+        width: 148px;
+        padding: 9px 0;
+        border: 4px solid #20242a;
+        border-radius: 9px;
+        background: #f7f2e7;
+        color: #20242a;
+        font-size: 25px;
+        line-height: 1.1;
+        font-weight: 950;
+        text-align: center;
+        transform: translateX(-50%);
+        box-shadow: 0 10px 0 rgba(0, 0, 0, 0.22);
+      }
+
+      .arm {
+        position: absolute;
+        top: 62%;
+        width: 38px;
+        height: 130px;
+        border-radius: 999px;
+        background: #f0c8a7;
+        box-shadow: 0 14px 0 #a86d55;
+      }
+
+      .arm.left {
+        left: 17%;
+        transform: rotate(28deg);
+      }
+
+      .arm.right {
+        right: 17%;
+        transform: rotate(-28deg);
+      }
+
+      .shadow {
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        width: 82%;
+        height: 14%;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.4);
+        filter: blur(18px);
+        transform: translateX(-50%) rotateX(70deg);
+      }
+
+      .tap-hint {
+        position: absolute;
+        left: 50%;
+        bottom: 46px;
+        z-index: 6;
+        padding: 6px 12px;
+        border: 1px solid rgba(247, 242, 231, 0.16);
+        border-radius: 999px;
+        background: rgba(17, 19, 21, 0.72);
+        color: #d5dbe1;
+        font-size: 12px;
+        white-space: nowrap;
+        transform: translateX(-50%);
+        backdrop-filter: blur(12px);
+      }
+
+      .level-name {
+        position: absolute;
+        left: 50%;
+        top: -10px;
+        z-index: 6;
+        min-width: 78px;
+        padding: 7px 14px;
+        border: 1px solid rgba(247, 242, 231, 0.24);
+        border-radius: 999px;
+        background: rgba(17, 19, 21, 0.78);
+        color: #f7f2e7;
+        font-size: 17px;
+        line-height: 1;
+        font-weight: 900;
+        text-align: center;
+        pointer-events: none;
+        transform: translateX(-50%);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.34);
+        backdrop-filter: blur(14px);
+      }
+
+      .thought-bubble {
+        position: absolute;
+        left: -140px;
+        top: 108px;
+        z-index: 9;
+        width: 228px;
+        min-height: 104px;
+        max-height: 164px;
+        padding: 14px 16px 16px;
+        overflow: hidden;
+        border: 1px solid rgba(196, 181, 253, 0.34);
+        border-radius: 22px;
+        background: rgba(17, 19, 21, 0.9);
+        box-shadow: 0 22px 52px rgba(0, 0, 0, 0.4);
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(-12px, 8px) scale(0.96);
+        transform-origin: right bottom;
+        transition:
+          opacity 220ms ease,
+          transform 260ms ease,
+          width 180ms ease,
+          min-height 180ms ease,
+          max-height 180ms ease;
+        backdrop-filter: blur(18px);
+      }
+
+      .thought-bubble::before,
+      .thought-bubble::after {
+        position: absolute;
+        border: 1px solid rgba(196, 181, 253, 0.34);
+        border-radius: 50%;
+        background: rgba(17, 19, 21, 0.92);
+        content: "";
+      }
+
+      .thought-bubble::before {
+        right: -15px;
+        bottom: 25px;
+        width: 12px;
+        height: 12px;
+      }
+
+      .thought-bubble::after {
+        right: -28px;
+        bottom: 13px;
+        width: 7px;
+        height: 7px;
+      }
+
+      .app[data-thinking="true"] .thought-bubble {
+        opacity: 1;
+        pointer-events: auto;
+        cursor: pointer;
+        transform: translate(0, 0) scale(1);
+      }
+
+      .thought-bubble:focus-visible {
+        outline: 2px solid #a78bfa;
+        outline-offset: 4px;
+      }
+
+      .thought-bubble.is-collapsed {
+        width: 142px;
+        min-height: 44px;
+        max-height: 44px;
+        padding: 15px 16px;
+        border-radius: 999px;
+      }
+
+      .thought-bubble.is-collapsed::before,
+      .thought-bubble.is-collapsed::after,
+      .thought-bubble.is-collapsed .thought-text {
+        display: none;
+      }
+
+      .thought-bubble.is-collapsed .thought-heading {
+        margin-bottom: 0;
+      }
+
+      .thought-heading {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 9px;
+        color: #c4b5fd;
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 900;
+      }
+
+      .thought-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #a78bfa;
+        box-shadow: 0 0 12px rgba(167, 139, 250, 0.9);
+        animation: thoughtPulse 1.2s ease-in-out infinite alternate;
+      }
+
+      .thought-text {
+        max-height: 102px;
+        overflow: hidden;
+        color: #e8edf2;
+        font-size: 13px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      .level-control {
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        z-index: 7;
+        width: 300px;
+        padding: 8px 12px 6px;
+        border: 1px solid rgba(247, 242, 231, 0.18);
+        border-radius: 18px;
+        background: rgba(17, 19, 21, 0.82);
+        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.38);
+        transform: translateX(-50%);
+        transition: opacity 160ms ease, transform 160ms ease;
+        backdrop-filter: blur(16px);
+      }
+
+      .level-slider {
+        display: block;
+        width: 100%;
+        height: 20px;
+        margin: 0;
+        padding: 0;
+        appearance: none;
+        -webkit-appearance: none;
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .level-slider::-webkit-slider-runnable-track {
+        height: 6px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #60a5fa, #a78bfa 48%, #f59e0b);
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.42);
+      }
+
+      .level-slider::-webkit-slider-thumb {
+        width: 20px;
+        height: 20px;
+        margin-top: -7px;
+        appearance: none;
+        -webkit-appearance: none;
+        border: 3px solid #20242a;
+        border-radius: 50%;
+        background: #f7f2e7;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.42);
+      }
+
+      .level-slider:focus-visible {
+        outline: 2px solid var(--liang-hue);
+        outline-offset: 4px;
+        border-radius: 999px;
+      }
+
+      .level-ticks {
+        display: flex;
+        justify-content: space-between;
+        padding: 0 7px;
+        pointer-events: none;
+      }
+
+      .level-ticks span {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: rgba(247, 242, 231, 0.34);
+      }
+
+      .level-ticks span.active {
+        background: #f7f2e7;
+        box-shadow: 0 0 10px var(--liang-hue);
+      }
+
+      .close-pet {
+        position: absolute;
+        right: 8px;
+        top: 24px;
+        z-index: 4;
+        display: grid;
+        width: 34px;
+        height: 34px;
+        place-items: center;
+        border: 1px solid rgba(247, 242, 231, 0.22);
+        border-radius: 50%;
+        background: rgba(17, 19, 21, 0.72);
+        color: #f7f2e7;
+        font-size: 20px;
+        line-height: 1;
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.32);
+        cursor: pointer;
+        backdrop-filter: blur(12px);
+      }
+
+      .close-pet:hover {
+        background: rgba(239, 68, 68, 0.9);
+        color: white;
+      }
+
+      .chat {
+        position: absolute;
+        left: 24px;
+        right: 24px;
+        bottom: 24px;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(14px) scale(0.98);
+        transform-origin: center bottom;
+        transition: opacity 160ms ease, transform 160ms ease;
+      }
+
+      .chat,
+      .bubble,
+      .composer,
+      textarea,
+      select,
+      button {
+        -webkit-user-select: text;
+        user-select: text;
+      }
+
+      .app[data-open="true"] .chat {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0) scale(1);
+      }
+
+      .app[data-open="true"] .pet-wrap {
+        bottom: 228px;
+      }
+
+      .app[data-open="true"] .pet-skin {
+        bottom: 20px;
+      }
+
+      .app[data-open="true"] .level-control {
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(-50%, 8px);
+      }
+
+      .bubble {
+        position: relative;
+        padding: 15px;
+        border: 1px solid rgba(247, 242, 231, 0.16);
+        border-radius: 18px;
+        background: rgba(17, 19, 21, 0.86);
+        box-shadow: 0 24px 72px rgba(0, 0, 0, 0.34);
+        backdrop-filter: blur(18px);
+      }
+
+      .session-toolbar {
+        display: grid;
+        grid-template-columns: 36px minmax(0, 1fr) 36px 36px;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .session-toolbar button {
+        display: grid;
+        width: 36px;
+        height: 36px;
+        place-items: center;
+        border: 1px solid rgba(247, 242, 231, 0.16);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.07);
+        color: #e8edf2;
+        font-size: 20px;
+        line-height: 1;
+        box-shadow: none;
+      }
+
+      .session-toolbar button:hover {
+        border-color: rgba(167, 139, 250, 0.56);
+        background: rgba(167, 139, 250, 0.18);
+      }
+
+      .session-toolbar .delete-session:hover {
+        border-color: rgba(248, 113, 113, 0.62);
+        background: rgba(239, 68, 68, 0.18);
+        color: #fecaca;
+      }
+
+      .session-toolbar .voice-toggle {
+        font-size: 13px;
+        font-weight: 850;
+      }
+
+      .session-toolbar .voice-toggle[aria-pressed="true"] {
+        border-color: rgba(96, 165, 250, 0.62);
+        background: rgba(96, 165, 250, 0.2);
+        color: #dbeafe;
+        box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.12);
+      }
+
+      .session-select {
+        width: 100%;
+        min-width: 0;
+        height: 36px;
+        padding: 0 32px 0 11px;
+        overflow: hidden;
+        border: 1px solid rgba(247, 242, 231, 0.16);
+        border-radius: 8px;
+        outline: 0;
+        background: rgba(255, 255, 255, 0.07);
+        color: #e8edf2;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 800;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+
+      .session-select:focus-visible {
+        border-color: #a78bfa;
+        outline: 2px solid rgba(167, 139, 250, 0.42);
+        outline-offset: 2px;
+      }
+
+      .session-select:disabled,
+      .session-toolbar button:disabled {
+        cursor: wait;
+        opacity: 0.48;
+      }
+
+      .messages {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: 160px;
+        min-height: 72px;
+        overflow: auto;
+        padding-right: 4px;
+        color: #e8edf2;
+        font-size: 14px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+      }
+
+      .msg {
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .msg.user {
+        align-self: flex-end;
+        background: rgba(167, 139, 250, 0.2);
+      }
+
+      .speaker {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--liang-hue);
+        font-size: 12px;
+        font-weight: 850;
+      }
+
+      .composer {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: end;
+        margin-top: 12px;
+        padding: 10px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 54px;
+        max-height: 120px;
+        resize: vertical;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: #f7f2e7;
+        font: inherit;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      textarea::placeholder {
+        color: #838d98;
+      }
+
+      button {
+        width: 42px;
+        height: 42px;
+        border: 0;
+        border-radius: 50%;
+        background: var(--liang-hue);
+        color: #20242a;
+        font-size: 20px;
+        font-weight: 950;
+        cursor: pointer;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
+      }
+
+      button:disabled {
+        cursor: wait;
+        opacity: 0.65;
+      }
+
+      .quick-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        overflow-x: auto;
+        padding: 2px 2px 1px;
+      }
+
+      .quick-actions button {
+        flex: 0 0 auto;
+        width: auto;
+        height: 32px;
+        padding: 0 12px;
+        border: 1px solid rgba(247, 242, 231, 0.14);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: #e8edf2;
+        font-size: 13px;
+        font-weight: 800;
+        box-shadow: none;
+      }
+
+      .quick-actions button:hover {
+        border-color: rgba(167, 139, 250, 0.48);
+        background: rgba(167, 139, 250, 0.18);
+      }
+
+      .quick-actions .danger {
+        color: #fecaca;
+      }
+
+      .mode-toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 52px;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .mode-segment {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 3px;
+        min-width: 0;
+        padding: 3px;
+        border: 1px solid rgba(247, 242, 231, 0.14);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .mode-segment button,
+      .settings-button {
+        width: 100%;
+        height: 30px;
+        min-width: 0;
+        padding: 0 6px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        background: transparent;
+        color: #aeb7c1;
+        font-size: 12px;
+        font-weight: 850;
+        line-height: 1;
+        box-shadow: none;
+        white-space: nowrap;
+      }
+
+      .mode-segment button:hover,
+      .settings-button:hover {
+        color: #f7f2e7;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .mode-segment button[aria-pressed="true"] {
+        border-color: rgba(167, 139, 250, 0.54);
+        background: rgba(167, 139, 250, 0.22);
+        color: #f3e8ff;
+      }
+
+      .settings-button {
+        height: 38px;
+        border-color: rgba(247, 242, 231, 0.14);
+        background: rgba(255, 255, 255, 0.07);
+        color: #e8edf2;
+      }
+
+      .settings-button[aria-expanded="true"] {
+        border-color: rgba(96, 165, 250, 0.58);
+        background: rgba(96, 165, 250, 0.2);
+        color: #dbeafe;
+      }
+
+      .settings-panel {
+        position: absolute;
+        right: 15px;
+        bottom: 56px;
+        z-index: 12;
+        display: grid;
+        width: min(310px, calc(100% - 30px));
+        gap: 10px;
+        padding: 13px;
+        border: 1px solid rgba(247, 242, 231, 0.18);
+        border-radius: 8px;
+        background: rgba(20, 23, 27, 0.97);
+        box-shadow: 0 22px 52px rgba(0, 0, 0, 0.46);
+        backdrop-filter: blur(20px);
+      }
+
+      .settings-panel[hidden] {
+        display: none;
+      }
+
+      .settings-title {
+        color: #f7f2e7;
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .workspace-setting {
+        display: grid;
+        gap: 7px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(247, 242, 231, 0.1);
+      }
+
+      .workspace-header {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+        color: #d7dde4;
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .workspace-button {
+        width: auto;
+        height: 28px;
+        padding: 0 10px;
+        border: 1px solid rgba(96, 165, 250, 0.42);
+        border-radius: 6px;
+        background: rgba(96, 165, 250, 0.14);
+        color: #dbeafe;
+        font-size: 12px;
+        box-shadow: none;
+      }
+
+      .workspace-path {
+        overflow: hidden;
+        color: #8f9aa6;
+        font-size: 11px;
+        line-height: 1.4;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .setting-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        color: #d7dde4;
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .setting-row select {
+        width: 82px;
+        height: 30px;
+        padding: 0 8px;
+        border: 1px solid rgba(247, 242, 231, 0.16);
+        border-radius: 6px;
+        outline: 0;
+        background: rgba(255, 255, 255, 0.08);
+        color: #e8edf2;
+        font: inherit;
+        font-size: 12px;
+      }
+
+      .setting-switch input {
+        position: relative;
+        width: 34px;
+        height: 20px;
+        margin: 0;
+        appearance: none;
+        -webkit-appearance: none;
+        border: 1px solid rgba(247, 242, 231, 0.18);
+        border-radius: 10px;
+        outline: 0;
+        background: #3b424a;
+        cursor: pointer;
+        transition: background 140ms ease, border-color 140ms ease;
+      }
+
+      .setting-switch input::before {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #f7f2e7;
+        content: "";
+        transition: transform 140ms ease;
+      }
+
+      .setting-switch input:checked {
+        border-color: rgba(96, 165, 250, 0.66);
+        background: #3b82f6;
+      }
+
+      .setting-switch input:checked::before {
+        transform: translateX(14px);
+      }
+
+      .setting-switch input:focus-visible,
+      .setting-row select:focus-visible {
+        outline: 2px solid rgba(96, 165, 250, 0.55);
+        outline-offset: 2px;
+      }
+
+      .settings-reset {
+        width: 100%;
+        height: 30px;
+        border: 1px solid rgba(247, 242, 231, 0.14);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.06);
+        color: #cbd5df;
+        font-size: 12px;
+        box-shadow: none;
+      }
+
+      @keyframes idle {
+        from {
+          transform: translateY(0) rotate(-1deg);
+        }
+        to {
+          transform: translateY(-12px) rotate(1deg);
+        }
+      }
+
+      @keyframes thoughtPulse {
+        from {
+          opacity: 0.45;
+          transform: scale(0.82);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1.12);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app" id="app" data-open="false" data-thinking="false">
+      <section class="pet-wrap" aria-label="梁圣宠物">
+        <button class="close-pet" id="closePet" aria-label="关闭梁圣桌宠" title="关闭">×</button>
+        <div class="level-name" id="levelName" aria-live="polite">梁圣</div>
+        <aside class="thought-bubble" id="thoughtBubble" role="button" tabindex="0" aria-label="展开或收起思考摘要" aria-live="polite" aria-expanded="true" title="展开或收起思考摘要">
+          <div class="thought-heading"><span class="thought-dot"></span><span>思考摘要</span></div>
+          <div class="thought-text" id="thoughtText">正在理解你的需求…</div>
+        </aside>
+        <div class="pet" id="pet" role="button" tabindex="0" aria-label="打开或关闭梁圣对话框">
+          <div class="skin-stage" id="skinStage" aria-hidden="true">
+            <img class="pet-skin" data-skin-index="0" src="assets/liang-skins/level-1-liangzai.png" alt="" draggable="false" style="--skin-scale: 1.1" />
+            <img class="pet-skin" data-skin-index="1" src="assets/liang-skins/level-0-fanliang.png" alt="" draggable="false" style="--skin-scale: 1.06" />
+            <img class="pet-skin" data-skin-index="2" src="assets/liang-skins/level-2-liangge.png" alt="" draggable="false" style="--skin-scale: 1.08" />
+            <img class="pet-skin is-active" data-skin-index="3" src="assets/liang-skins/level-3-liangsheng.png" alt="" draggable="false" style="--skin-scale: 1" />
+            <img class="pet-skin" data-skin-index="4" src="assets/liang-skins/level-4-liangzu.png" alt="" draggable="false" style="--skin-scale: 1.04" />
+            <img class="pet-skin" data-skin-index="5" src="assets/liang-skins/level-5-tianzun.png" alt="" draggable="false" style="--skin-scale: 1.14" />
+          </div>
+          <div class="shadow"></div>
+          <div class="halo"></div>
+          <div class="plaque">梁圣</div>
+          <div class="head">
+            <div class="hair"></div>
+            <div class="glasses"></div>
+            <div class="bridge"></div>
+            <div class="mouth"></div>
+          </div>
+          <div class="arm left"></div>
+          <div class="arm right"></div>
+          <div class="body"><div class="badge">众生平等</div></div>
+        </div>
+        <div class="tap-hint" id="status">正在召唤 Harness...</div>
+        <div class="level-control" id="levelControl" data-level="3">
+          <input class="level-slider" id="levelSlider" type="range" min="0" max="5" step="1" value="3" aria-label="人物档位" aria-valuetext="梁圣" />
+          <div class="level-ticks" aria-hidden="true">
+            <span></span><span></span><span></span><span class="active"></span><span></span><span></span>
+          </div>
+        </div>
+      </section>
+      <section class="chat" aria-label="梁圣对话框">
+        <div class="bubble">
+          <div class="session-toolbar" id="sessionToolbar" aria-label="会话管理">
+            <button type="button" id="newSession" aria-label="新建会话" title="新建会话">＋</button>
+            <select class="session-select" id="sessionSelect" aria-label="切换会话" title="切换会话"></select>
+            <button type="button" class="voice-toggle" id="voiceToggle" aria-label="关闭自动朗读" aria-pressed="true" title="自动朗读已开启">声</button>
+            <button type="button" class="delete-session" id="deleteSession" aria-label="删除当前会话" title="删除当前会话">⌫</button>
+          </div>
+          <div class="messages" id="messages"></div>
+          <div class="composer">
+            <textarea id="input" placeholder="例如：帮我写一个 Node.js 脚本……"></textarea>
+            <button id="send" aria-label="发送">↑</button>
+          </div>
+          <div class="quick-actions" aria-label="快捷功能">
+            <button type="button" data-prompt="阅读当前项目，概括项目结构、运行方式和下一步建议。">分析项目</button>
+            <button type="button" data-prompt="请检查当前项目的问题，定位错误原因，并给出可执行的修复方案。">修复错误</button>
+            <button type="button" data-prompt="帮我写一个 Node.js 脚本：">写脚本</button>
+            <button type="button" class="danger" id="clearMessages">清空</button>
+          </div>
+          <div class="mode-toolbar">
+            <div class="mode-segment" id="modeSegment" role="group" aria-label="Harness 模式">
+              <button type="button" data-mode-id="standard" aria-pressed="true" title="完整编码能力">标准</button>
+              <button type="button" data-mode-id="ptc" aria-pressed="false" title="用 TypeScript 组合多步工具操作">PTC</button>
+              <button type="button" data-mode-id="minimal" aria-pressed="false" title="仅采用必要的 Shell 与文件编辑步骤">极简</button>
+              <button type="button" data-mode-id="cordis" aria-pressed="false" title="创建 Agent、preset 与 Harness 插件">创造</button>
+            </div>
+            <button type="button" class="settings-button" id="settingsButton" aria-label="打开设置" aria-expanded="false" title="设置">设置</button>
+          </div>
+          <div class="settings-panel" id="settingsPanel" aria-label="桌宠设置" hidden>
+            <div class="settings-title">桌宠设置</div>
+            <div class="workspace-setting">
+              <div class="workspace-header"><span>Harness 工作区</span><button type="button" class="workspace-button" id="workspaceButton">选择</button></div>
+              <div class="workspace-path" id="workspacePath" title="">未选择</div>
+            </div>
+            <label class="setting-row setting-switch"><span>自动朗读</span><input type="checkbox" id="settingsVoice" /></label>
+            <label class="setting-row setting-switch"><span>携带会话上下文</span><input type="checkbox" id="settingsHistory" /></label>
+            <label class="setting-row"><span>上下文消息数</span>
+              <select id="settingsHistoryLimit" aria-label="上下文消息数">
+                <option value="4">4 条</option>
+                <option value="8">8 条</option>
+                <option value="12">12 条</option>
+                <option value="20">20 条</option>
+              </select>
+            </label>
+            <button type="button" class="settings-reset" id="resetSettings">恢复默认</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const app = document.getElementById("app");
+      const pet = document.getElementById("pet");
+      const petSkins = [...document.querySelectorAll(".pet-skin")];
+      const levelName = document.getElementById("levelName");
+      const levelControl = document.getElementById("levelControl");
+      const levelSlider = document.getElementById("levelSlider");
+      const levelTicks = [...document.querySelectorAll(".level-ticks span")];
+      const thoughtBubble = document.getElementById("thoughtBubble");
+      const thoughtText = document.getElementById("thoughtText");
+      const messages = document.getElementById("messages");
+      const sessionToolbar = document.getElementById("sessionToolbar");
+      const newSession = document.getElementById("newSession");
+      const sessionSelect = document.getElementById("sessionSelect");
+      const voiceToggle = document.getElementById("voiceToggle");
+      const deleteSession = document.getElementById("deleteSession");
+      const input = document.getElementById("input");
+      const send = document.getElementById("send");
+      const status = document.getElementById("status");
+      const chat = document.querySelector(".chat");
+      const closePet = document.getElementById("closePet");
+      const clearMessages = document.getElementById("clearMessages");
+      const quickActions = document.querySelector(".quick-actions");
+      const modeSegment = document.getElementById("modeSegment");
+      const modeButtons = [...modeSegment.querySelectorAll("button[data-mode-id]")];
+      const settingsButton = document.getElementById("settingsButton");
+      const settingsPanel = document.getElementById("settingsPanel");
+      const workspaceButton = document.getElementById("workspaceButton");
+      const workspacePath = document.getElementById("workspacePath");
+      const settingsVoice = document.getElementById("settingsVoice");
+      const settingsHistory = document.getElementById("settingsHistory");
+      const settingsHistoryLimit = document.getElementById("settingsHistoryLimit");
+      const resetSettings = document.getElementById("resetSettings");
+      const skins = [
+        { name: "小梁", voiceTone: "成年男声 · 怂滑低语", preview: "这是小梁档，声音轻一点。", src: "assets/liang-skins/level-1-liangzai.png", scale: 1.1 },
+        { name: "牢梁", voiceTone: "成年男声 · 鬼祟慢声", preview: "这是牢梁档，咱们稳一点。", src: "assets/liang-skins/level-0-fanliang.png", scale: 1.06 },
+        { name: "梁子", voiceTone: "成年男声 · 油滑语气", preview: "这是梁子档，我可门儿清。", src: "assets/liang-skins/level-2-liangge.png", scale: 1.08 },
+        { name: "梁圣", voiceTone: "成年男声 · 老练暗声", preview: "这是梁圣档，门道慢慢讲。", src: "assets/liang-skins/level-3-liangsheng.png", scale: 1 },
+        { name: "梁神", voiceTone: "成年男声 · 阴沉强势", preview: "这是梁神档，听清楚了。", src: "assets/liang-skins/level-4-liangzu.png", scale: 1.04 },
+        { name: "梁祖", voiceTone: "成年男声 · 低沉威压", preview: "这是梁祖档，此事已有定论。", src: "assets/liang-skins/level-5-tianzun.png", scale: 1.14 }
+      ];
+      const modes = [
+        { id: "standard", name: "标准模式" },
+        { id: "ptc", name: "PTC 模式" },
+        { id: "minimal", name: "极简模式" },
+        { id: "cordis", name: "创造模式" }
+      ];
+      const SESSION_STORAGE_KEY = "liang-pet-sessions-v1";
+      const VOICE_STORAGE_KEY = "liang-pet-voice-enabled-v1";
+      const MODE_STORAGE_KEY = "liang-pet-mode-v1";
+      const HISTORY_STORAGE_KEY = "liang-pet-history-enabled-v1";
+      const HISTORY_LIMIT_STORAGE_KEY = "liang-pet-history-limit-v1";
+      const DEFAULT_GREETING = "点我就能收起。你说需求，我让 Harness 去办。";
+      const MAX_SESSIONS = 24;
+      const MAX_MESSAGES_PER_SESSION = 40;
+      let drag = null;
+      let thoughtHideTimer = null;
+      let activeAudio = null;
+      let sessions = [];
+      let currentSessionId = "";
+      let voiceEnabled = localStorage.getItem(VOICE_STORAGE_KEY) !== "false";
+      let preferredModeId = modes.some((mode) => mode.id === localStorage.getItem(MODE_STORAGE_KEY))
+        ? localStorage.getItem(MODE_STORAGE_KEY)
+        : "standard";
+      let historyEnabled = localStorage.getItem(HISTORY_STORAGE_KEY) !== "false";
+      let historyLimit = [4, 8, 12, 20].includes(Number(localStorage.getItem(HISTORY_LIMIT_STORAGE_KEY)))
+        ? Number(localStorage.getItem(HISTORY_LIMIT_STORAGE_KEY))
+        : 12;
+
+      skins.forEach((skin) => {
+        const image = new Image();
+        image.src = skin.src;
+      });
+
+      function selectSkin(value) {
+        const index = Math.max(0, Math.min(skins.length - 1, Math.round(Number(value))));
+        const skin = skins[index];
+        petSkins.forEach((image, imageIndex) => {
+          image.classList.toggle("is-active", imageIndex === index);
+        });
+        levelName.textContent = skin.name;
+        pet.setAttribute("aria-label", `打开或关闭${skin.name}对话框`);
+        levelSlider.value = String(index);
+        levelSlider.setAttribute("aria-valuetext", skin.name);
+        levelControl.dataset.level = String(index);
+        levelTicks.forEach((tick, tickIndex) => tick.classList.toggle("active", tickIndex === index));
+        updateVoiceToggle();
+      }
+
+      function getSelectedLevel() {
+        return Math.max(0, Math.min(skins.length - 1, Math.round(Number(levelSlider.value) || 0)));
+      }
+
+      function updateVoiceToggle() {
+        const skin = skins[getSelectedLevel()];
+        voiceToggle.setAttribute("aria-pressed", String(voiceEnabled));
+        voiceToggle.setAttribute("aria-label", voiceEnabled ? "关闭自动朗读" : "开启自动朗读");
+        voiceToggle.title = voiceEnabled
+          ? `自动朗读已开启：${skin.name} · ${skin.voiceTone}`
+          : "自动朗读已关闭";
+        settingsVoice.checked = voiceEnabled;
+      }
+
+      function setVoiceEnabled(enabled, preview = false) {
+        voiceEnabled = Boolean(enabled);
+        localStorage.setItem(VOICE_STORAGE_KEY, String(voiceEnabled));
+        updateVoiceToggle();
+        if (voiceEnabled && preview) {
+          previewSelectedVoice();
+        } else if (!voiceEnabled) {
+          stopVoicePlayback();
+          status.textContent = "自动朗读已关闭。";
+        }
+      }
+
+      function stopVoicePlayback() {
+        if (activeAudio) {
+          activeAudio.pause();
+          activeAudio.src = "";
+          activeAudio = null;
+        }
+        window.liangPet?.stopSpeaking();
+      }
+
+      function getCurrentMode() {
+        const modeId = getCurrentSession()?.modeId || preferredModeId;
+        return modes.find((mode) => mode.id === modeId) || modes[0];
+      }
+
+      function updateModeControls() {
+        const currentMode = getCurrentMode();
+        modeButtons.forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.modeId === currentMode.id));
+        });
+      }
+
+      function selectMode(modeId) {
+        const mode = modes.find((item) => item.id === modeId);
+        const session = getCurrentSession();
+        if (!mode || !session) return;
+        session.modeId = mode.id;
+        session.updatedAt = Date.now();
+        preferredModeId = mode.id;
+        localStorage.setItem(MODE_STORAGE_KEY, mode.id);
+        saveSessionState();
+        updateModeControls();
+        status.textContent = `已切换至${mode.name}。`;
+      }
+
+      function updateSettingsControls() {
+        settingsVoice.checked = voiceEnabled;
+        settingsHistory.checked = historyEnabled;
+        settingsHistoryLimit.value = String(historyLimit);
+        settingsHistoryLimit.disabled = !historyEnabled;
+      }
+
+      function updateWorkspaceDisplay(settings) {
+        const value = String(settings?.workspacePath || "");
+        workspacePath.textContent = value || "未选择";
+        workspacePath.title = value;
+      }
+
+      async function refreshAppSettings() {
+        if (!window.liangPet?.getAppSettings) return;
+        try {
+          updateWorkspaceDisplay(await window.liangPet.getAppSettings());
+        } catch (error) {
+          status.textContent = error.message || "无法读取应用设置。";
+        }
+      }
+
+      function setSettingsOpen(open) {
+        settingsPanel.hidden = !open;
+        settingsButton.setAttribute("aria-expanded", String(open));
+        settingsButton.setAttribute("aria-label", open ? "关闭设置" : "打开设置");
+      }
+
+      async function speakText(text, level = getSelectedLevel()) {
+        if (!voiceEnabled || !window.liangPet?.speak) return;
+        stopVoicePlayback();
+        try {
+          const result = await window.liangPet.speak({ text, level });
+          if (!result?.started || !result.audioDataUrl) return;
+          const audio = new Audio(result.audioDataUrl);
+          activeAudio = audio;
+          audio.addEventListener("ended", () => {
+            if (activeAudio !== audio) return;
+            activeAudio = null;
+            status.textContent = `${skins[level].name}朗读完成。`;
+          }, { once: true });
+          await audio.play();
+        } catch (error) {
+          status.textContent = error.message || "系统语音暂时不可用。";
+        }
+      }
+
+      function previewSelectedVoice() {
+        const skin = skins[getSelectedLevel()];
+        status.textContent = `${skin.name} · ${skin.voiceTone}`;
+        speakText(skin.preview);
+      }
+
+      levelControl.addEventListener("pointerdown", (event) => {
+        event.stopPropagation();
+        window.liangPet?.focusWindow();
+      });
+
+      levelControl.addEventListener("click", (event) => {
+        event.stopPropagation();
+      });
+
+      levelSlider.addEventListener("input", (event) => {
+        selectSkin(event.target.value);
+      });
+
+      levelSlider.addEventListener("change", () => {
+        previewSelectedVoice();
+      });
+
+      function toggleChat() {
+        app.dataset.open = app.dataset.open === "true" ? "false" : "true";
+        if (app.dataset.open === "true") {
+          window.liangPet?.focusWindow();
+          setTimeout(() => input.focus(), 80);
+        }
+      }
+
+      input.addEventListener("pointerdown", (event) => {
+        event.stopPropagation();
+        window.liangPet?.focusWindow();
+        setTimeout(() => input.focus(), 0);
+      });
+
+      chat.addEventListener("pointerdown", (event) => {
+        event.stopPropagation();
+        window.liangPet?.focusWindow();
+      });
+
+      input.addEventListener("click", (event) => {
+        event.stopPropagation();
+        input.focus();
+      });
+
+      send.addEventListener("pointerdown", (event) => {
+        event.stopPropagation();
+        window.liangPet?.focusWindow();
+      });
+
+      closePet.addEventListener("pointerdown", (event) => {
+        event.stopPropagation();
+      });
+
+      closePet.addEventListener("click", (event) => {
+        event.stopPropagation();
+        window.liangPet?.closeApp();
+      });
+
+      quickActions.addEventListener("pointerdown", (event) => {
+        event.stopPropagation();
+        window.liangPet?.focusWindow();
+      });
+
+      quickActions.addEventListener("click", (event) => {
+        const action = event.target.closest("button[data-prompt]");
+        if (!action) return;
+        event.stopPropagation();
+        app.dataset.open = "true";
+        input.value = action.dataset.prompt;
+        input.focus();
+      });
+
+      sessionToolbar.addEventListener("pointerdown", (event) => {
+        event.stopPropagation();
+        window.liangPet?.focusWindow();
+      });
+
+      newSession.addEventListener("click", (event) => {
+        event.stopPropagation();
+        if (send.disabled) return;
+        createAndSelectSession();
+        input.focus();
+      });
+
+      deleteSession.addEventListener("click", (event) => {
+        event.stopPropagation();
+        if (send.disabled) return;
+        deleteCurrentSession();
+        input.focus();
+      });
+
+      sessionSelect.addEventListener("change", (event) => {
+        if (send.disabled) return;
+        selectSession(event.target.value);
+        input.focus();
+      });
+
+      voiceToggle.addEventListener("click", (event) => {
+        event.stopPropagation();
+        setVoiceEnabled(!voiceEnabled, !voiceEnabled);
+      });
+
+      clearMessages.addEventListener("click", (event) => {
+        event.stopPropagation();
+        if (send.disabled) return;
+        stopVoicePlayback();
+        resetCurrentSession();
+        input.value = "";
+        clearTimeout(thoughtHideTimer);
+        app.dataset.thinking = "false";
+        thoughtText.textContent = "当前会话已清空。";
+        status.textContent = "当前会话已清空。";
+        input.focus();
+      });
+
+      modeSegment.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-mode-id]");
+        if (!button || send.disabled) return;
+        event.stopPropagation();
+        selectMode(button.dataset.modeId);
+        input.focus();
+      });
+
+      settingsButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        if (send.disabled) return;
+        setSettingsOpen(settingsPanel.hidden);
+      });
+
+      settingsPanel.addEventListener("click", (event) => {
+        event.stopPropagation();
+      });
+
+      workspaceButton.addEventListener("click", async (event) => {
+        event.stopPropagation();
+        workspaceButton.disabled = true;
+        try {
+          updateWorkspaceDisplay(await window.liangPet.chooseWorkspace());
+        } catch (error) {
+          status.textContent = error.message || "无法选择工作区。";
+        } finally {
+          workspaceButton.disabled = false;
+        }
+      });
+
+      settingsVoice.addEventListener("change", () => {
+        setVoiceEnabled(settingsVoice.checked, settingsVoice.checked);
+      });
+
+      settingsHistory.addEventListener("change", () => {
+        historyEnabled = settingsHistory.checked;
+        localStorage.setItem(HISTORY_STORAGE_KEY, String(historyEnabled));
+        updateSettingsControls();
+        status.textContent = historyEnabled ? "会话上下文已开启。" : "会话上下文已关闭。";
+      });
+
+      settingsHistoryLimit.addEventListener("change", () => {
+        historyLimit = [4, 8, 12, 20].includes(Number(settingsHistoryLimit.value))
+          ? Number(settingsHistoryLimit.value)
+          : 12;
+        localStorage.setItem(HISTORY_LIMIT_STORAGE_KEY, String(historyLimit));
+        updateSettingsControls();
+      });
+
+      resetSettings.addEventListener("click", () => {
+        historyEnabled = true;
+        historyLimit = 12;
+        localStorage.setItem(HISTORY_STORAGE_KEY, "true");
+        localStorage.setItem(HISTORY_LIMIT_STORAGE_KEY, "12");
+        setVoiceEnabled(true, false);
+        selectMode("standard");
+        updateSettingsControls();
+        status.textContent = "设置已恢复默认。";
+      });
+
+      document.addEventListener("click", (event) => {
+        if (settingsPanel.hidden) return;
+        if (settingsPanel.contains(event.target) || settingsButton.contains(event.target)) return;
+        setSettingsOpen(false);
+      });
+
+      pet.addEventListener("pointerdown", (event) => {
+        if (event.button !== 0) return;
+        drag = {
+          pointerId: event.pointerId,
+          startX: event.screenX,
+          startY: event.screenY,
+          moved: false
+        };
+        pet.setPointerCapture(event.pointerId);
+        window.liangPet?.dragStart({ screenX: event.screenX, screenY: event.screenY });
+      });
+
+      pet.addEventListener("pointermove", (event) => {
+        if (!drag || event.pointerId !== drag.pointerId) return;
+        const distance = Math.hypot(event.screenX - drag.startX, event.screenY - drag.startY);
+        if (distance > 4) drag.moved = true;
+        if (drag.moved) {
+          window.liangPet?.dragMove({ screenX: event.screenX, screenY: event.screenY });
+        }
+      });
+
+      pet.addEventListener("pointerup", (event) => {
+        if (!drag || event.pointerId !== drag.pointerId) return;
+        const shouldToggle = !drag.moved;
+        drag = null;
+        window.liangPet?.dragEnd();
+        if (shouldToggle) toggleChat();
+      });
+
+      pet.addEventListener("pointercancel", () => {
+        drag = null;
+        window.liangPet?.dragEnd();
+      });
+
+      pet.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          toggleChat();
+        }
+      });
+
+      function escapeHtml(text) {
+        return String(text)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function stripPrivateReasoning(text) {
+        return String(text || "")
+          .replace(/<think>[\s\S]*?<\/think>/gi, "")
+          .replace(/<think>[\s\S]*$/gi, "")
+          .replace(/<thinking>[\s\S]*?<\/thinking>/gi, "")
+          .replace(/<thinking>[\s\S]*$/gi, "")
+          .trim();
+      }
+
+      function summarizePublicProgress(text) {
+        const lines = stripPrivateReasoning(text)
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean);
+        const summary = lines.slice(-3).join("\n");
+        if (!summary) return "正在分析，暂时还没有可公开的摘要…";
+        return summary.length > 280 ? `…${summary.slice(-279)}` : summary;
+      }
+
+      function extractFinalOutput(text) {
+        const cleaned = stripPrivateReasoning(text);
+        const markers = [/最终(?:答案|输出)\s*[:：]\s*/gi, /final\s+(?:answer|output)\s*[:：]\s*/gi];
+        let markerEnd = -1;
+        markers.forEach((pattern) => {
+          for (const match of cleaned.matchAll(pattern)) {
+            markerEnd = Math.max(markerEnd, match.index + match[0].length);
+          }
+        });
+        return (markerEnd >= 0 ? cleaned.slice(markerEnd) : cleaned).trim();
+      }
+
+      function showThought(text) {
+        clearTimeout(thoughtHideTimer);
+        thoughtText.textContent = text;
+        app.dataset.thinking = "true";
+      }
+
+      function setThoughtExpanded(expanded) {
+        thoughtBubble.classList.toggle("is-collapsed", !expanded);
+        thoughtBubble.setAttribute("aria-expanded", String(expanded));
+      }
+
+      function finishThought(text) {
+        showThought(text);
+        thoughtHideTimer = setTimeout(() => {
+          app.dataset.thinking = "false";
+        }, 8000);
+      }
+
+      thoughtBubble.addEventListener("pointerdown", (event) => {
+        event.stopPropagation();
+        window.liangPet?.focusWindow();
+      });
+
+      thoughtBubble.addEventListener("click", (event) => {
+        event.stopPropagation();
+        setThoughtExpanded(thoughtBubble.getAttribute("aria-expanded") !== "true");
+      });
+
+      thoughtBubble.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        setThoughtExpanded(thoughtBubble.getAttribute("aria-expanded") !== "true");
+      });
+
+      function createSessionRecord() {
+        const now = Date.now();
+        const fallbackId = `${now.toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+        const characterName = skins[getSelectedLevel()]?.name || "梁圣";
+        return {
+          id: crypto.randomUUID?.() || fallbackId,
+          title: "新会话",
+          createdAt: now,
+          updatedAt: now,
+          modeId: preferredModeId,
+          messages: [{ kind: "assistant", text: DEFAULT_GREETING, characterName }]
+        };
+      }
+
+      function normalizeSession(session) {
+        if (!session || typeof session !== "object") return null;
+        const messagesList = Array.isArray(session.messages)
+          ? session.messages
+            .filter((message) => message && ["user", "assistant"].includes(message.kind) && typeof message.text === "string")
+            .map((message) => ({
+              kind: message.kind,
+              text: message.text,
+              characterName: message.kind === "assistant" && skins.some((skin) => skin.name === message.characterName)
+                ? message.characterName
+                : undefined
+            }))
+            .slice(-MAX_MESSAGES_PER_SESSION)
+          : [];
+        const normalized = createSessionRecord();
+        normalized.id = typeof session.id === "string" && session.id ? session.id : normalized.id;
+        normalized.title = typeof session.title === "string" && session.title.trim() ? session.title.trim().slice(0, 24) : "新会话";
+        normalized.createdAt = Number(session.createdAt) || normalized.createdAt;
+        normalized.updatedAt = Number(session.updatedAt) || normalized.updatedAt;
+        normalized.modeId = modes.some((mode) => mode.id === session.modeId)
+          ? session.modeId
+          : preferredModeId;
+        normalized.messages = messagesList.length ? messagesList : normalized.messages;
+        return normalized;
+      }
+
+      function saveSessionState() {
+        try {
+          localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ currentSessionId, sessions }));
+        } catch {
+          // Keep the in-memory sessions usable if local storage is unavailable.
+        }
+      }
+
+      function getCurrentSession() {
+        return sessions.find((session) => session.id === currentSessionId) || sessions[0];
+      }
+
+      function appendMessageElement(kind, text, characterName) {
+        const message = document.createElement("div");
+        message.className = `msg ${kind}`;
+        const speaker = kind === "user"
+          ? "你"
+          : characterName || skins[getSelectedLevel()]?.name || "梁圣";
+        message.innerHTML = `<span class="speaker">${speaker}</span>${escapeHtml(text)}`;
+        messages.appendChild(message);
+        messages.scrollTop = messages.scrollHeight;
+        return message;
+      }
+
+      function renderSessionOptions() {
+        sessionSelect.innerHTML = "";
+        sessions.forEach((session) => {
+          const option = document.createElement("option");
+          option.value = session.id;
+          option.textContent = session.title;
+          option.selected = session.id === currentSessionId;
+          sessionSelect.appendChild(option);
+        });
+      }
+
+      function renderCurrentSession() {
+        const session = getCurrentSession();
+        messages.innerHTML = "";
+        session?.messages.forEach((message) => appendMessageElement(message.kind, message.text, message.characterName));
+        renderSessionOptions();
+        updateModeControls();
+      }
+
+      function initializeSessions() {
+        try {
+          const stored = JSON.parse(localStorage.getItem(SESSION_STORAGE_KEY) || "null");
+          sessions = Array.isArray(stored?.sessions)
+            ? stored.sessions.map(normalizeSession).filter(Boolean).slice(0, MAX_SESSIONS)
+            : [];
+          currentSessionId = typeof stored?.currentSessionId === "string" ? stored.currentSessionId : "";
+        } catch {
+          sessions = [];
+          currentSessionId = "";
+        }
+
+        if (!sessions.length) sessions = [createSessionRecord()];
+        if (!sessions.some((session) => session.id === currentSessionId)) currentSessionId = sessions[0].id;
+        saveSessionState();
+        renderCurrentSession();
+      }
+
+      function selectSession(sessionId) {
+        if (!sessions.some((session) => session.id === sessionId)) return;
+        currentSessionId = sessionId;
+        saveSessionState();
+        renderCurrentSession();
+      }
+
+      function createAndSelectSession() {
+        const session = createSessionRecord();
+        sessions.unshift(session);
+        sessions = sessions.slice(0, MAX_SESSIONS);
+        currentSessionId = session.id;
+        saveSessionState();
+        renderCurrentSession();
+      }
+
+      function deleteCurrentSession() {
+        const index = sessions.findIndex((session) => session.id === currentSessionId);
+        if (index >= 0) sessions.splice(index, 1);
+        if (!sessions.length) sessions.push(createSessionRecord());
+        currentSessionId = sessions[Math.min(Math.max(index, 0), sessions.length - 1)].id;
+        saveSessionState();
+        renderCurrentSession();
+      }
+
+      function resetCurrentSession() {
+        const session = getCurrentSession();
+        if (!session) return;
+        session.title = "新会话";
+        session.updatedAt = Date.now();
+        session.messages = [{
+          kind: "assistant",
+          text: DEFAULT_GREETING,
+          characterName: skins[getSelectedLevel()]?.name || "梁圣"
+        }];
+        saveSessionState();
+        renderCurrentSession();
+      }
+
+      function makeSessionTitle(text) {
+        const compact = String(text).replace(/\s+/g, " ").trim();
+        return compact.length > 18 ? `${compact.slice(0, 18)}…` : compact || "新会话";
+      }
+
+      function addMessageToSession(sessionId, kind, text, characterName) {
+        const session = sessions.find((item) => item.id === sessionId);
+        if (!session) return null;
+        const isFirstUserMessage = kind === "user" && !session.messages.some((message) => message.kind === "user");
+        const message = {
+          kind,
+          text: String(text),
+          characterName: kind === "assistant" ? characterName : undefined
+        };
+        session.messages.push(message);
+        session.messages = session.messages.slice(-MAX_MESSAGES_PER_SESSION);
+        session.updatedAt = Date.now();
+        if (isFirstUserMessage) session.title = makeSessionTitle(text);
+
+        const sessionIndex = sessions.findIndex((item) => item.id === sessionId);
+        if (sessionIndex > 0) {
+          sessions.splice(sessionIndex, 1);
+          sessions.unshift(session);
+        }
+
+        saveSessionState();
+        renderSessionOptions();
+        return sessionId === currentSessionId ? appendMessageElement(kind, text, characterName) : null;
+      }
+
+      function addMessage(kind, text) {
+        return addMessageToSession(currentSessionId, kind, text);
+      }
+
+      function buildHarnessPrompt(session, text) {
+        if (!historyEnabled) return text;
+        const history = (session?.messages || [])
+          .filter((message) => !(message.kind === "assistant" && message.text === DEFAULT_GREETING))
+          .slice(-historyLimit);
+        if (!history.length) return text;
+        const transcript = history
+          .map((message) => `${message.kind === "user" ? "用户" : "助手"}：${message.text}`)
+          .join("\n\n");
+        return `请结合以下当前会话历史继续回答，不要逐字复述历史。\n\n${transcript}\n\n用户当前请求：${text}`;
+      }
+
+      function setSessionControlsDisabled(disabled) {
+        newSession.disabled = disabled;
+        deleteSession.disabled = disabled;
+        sessionSelect.disabled = disabled;
+        clearMessages.disabled = disabled;
+        modeButtons.forEach((button) => {
+          button.disabled = disabled;
+        });
+        settingsButton.disabled = disabled;
+        workspaceButton.disabled = disabled;
+        if (disabled) setSettingsOpen(false);
+      }
+
+      initializeSessions();
+      updateVoiceToggle();
+      updateModeControls();
+      updateSettingsControls();
+      refreshAppSettings();
+
+      async function submit() {
+        const text = input.value.trim();
+        if (!text || send.disabled) return;
+
+        const requestSession = getCurrentSession();
+        const requestSessionId = requestSession.id;
+        const mode = getCurrentMode();
+        const level = getSelectedLevel();
+        const character = skins[level];
+        const harnessPrompt = buildHarnessPrompt(requestSession, text);
+        stopVoicePlayback();
+        app.dataset.open = "true";
+        addMessageToSession(requestSessionId, "user", text);
+        input.value = "";
+        send.disabled = true;
+        setSessionControlsDisabled(true);
+        setThoughtExpanded(true);
+        showThought(`${character.name} · ${mode.name}已启用，正在理解需求并调用 Harness…`);
+
+        try {
+          const result = await window.liangPet.send({ prompt: harnessPrompt, modeId: mode.id, level });
+          const finalOutput = extractFinalOutput(result) || "任务已完成，但没有可显示的最终文本。";
+          addMessageToSession(requestSessionId, "assistant", finalOutput, character.name);
+          finishThought("分析完成，最终结果已放入对话框。");
+          speakText(finalOutput, level);
+        } catch (error) {
+          const errorOutput = error.message || "调用失败了。";
+          addMessageToSession(requestSessionId, "assistant", errorOutput, character.name);
+          finishThought("处理遇到问题，错误信息已放入对话框。");
+          speakText(errorOutput, level);
+        } finally {
+          send.disabled = false;
+          setSessionControlsDisabled(false);
+        }
+      }
+
+      send.addEventListener("click", submit);
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          submit();
+        }
+      });
+
+      window.liangPet?.onPartial((text) => {
+        if (!send.disabled) return;
+        showThought(summarizePublicProgress(text));
+      });
+
+      window.liangPet?.onStatus((text) => {
+        status.textContent = text;
+      });
+    </script>
+  </body>
+</html>

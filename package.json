@@ -1,0 +1,73 @@
+{
+  "name": "liang-desktop-pet",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An unofficial desktop companion UI for DeepSeek Harness.",
+  "license": "MIT",
+  "author": "Flycat43",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Flycat43/liang-desktop-pet.git"
+  },
+  "homepage": "https://github.com/Flycat43/liang-desktop-pet#readme",
+  "bugs": "https://github.com/Flycat43/liang-desktop-pet/issues",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win",
+    "dist:linux": "electron-builder --linux",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh": "0.1.1-rc.2",
+    "msedge-tts": "2.0.7"
+  },
+  "devDependencies": {
+    "electron": "^43.4.1",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "io.github.flycat43.liang-desktop-pet",
+    "productName": "Liang Desktop Pet",
+    "asar": false,
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "pet.html",
+      "assets/**/*",
+      "package.json",
+      "LICENSE",
+      "ASSETS_LICENSE.md"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "linux": {
+      "category": "Development",
+      "target": [
+        "AppImage"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
