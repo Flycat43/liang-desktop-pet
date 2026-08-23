@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld("liangPet", {
   speak: (payload) => ipcRenderer.invoke("liang:speak", payload),
   getAppSettings: () => ipcRenderer.invoke("liang:get-app-settings"),
   chooseWorkspace: () => ipcRenderer.invoke("liang:choose-workspace"),
+  toggleInterface: () => ipcRenderer.invoke("liang:toggle-interface"),
   stopSpeaking: () => ipcRenderer.send("liang:stop-speaking"),
   dragStart: (point) => ipcRenderer.send("liang:drag-start", point),
   dragMove: (point) => ipcRenderer.send("liang:drag-move", point),

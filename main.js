@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, screen } = require("electron");
 const { spawn } = require("child_process");
 const fs = require("fs");
 const os = require("os");
@@ -8,6 +8,8 @@ const { MsEdgeTTS, OUTPUT_FORMAT } = require("msedge-tts");
 const DSH_BIN_RELATIVE_PATH = path.join("node_modules", "@deepseek-ai", "dsh", "lib", "bin.js");
 const SETTINGS_FILE_NAME = "settings.json";
 const TASK_TIMEOUT_MS = 10 * 60 * 1000;
+const HARNESS_WEB_START_TIMEOUT_MS = 45 * 1000;
+const HARNESS_WEB_URL = "http://127.0.0.1:3080";
 const MAX_CAPTURE_LENGTH = 2_000_000;
 const MAX_SPEECH_LENGTH = 8_000;
 const HARNESS_MODES = Object.freeze({
@@ -71,11 +73,17 @@ const SPEECH_PROFILES = [
 
 let petWindow;
 let harnessTaskProcess;
+let harnessWebProcess;
+let harnessWebStartPromise;
+let harnessWebUrl = "";
 let speechClient;
 let speechAudioDirectory;
 let speechRequestSequence = 0;
 let dragState = null;
 let appSettings = { workspacePath: "" };
+let currentInterface = "pet";
+let petWindowBounds;
+let harnessWindowBounds;
 
 function createPetWindow() {
   petWindow = new BrowserWindow({
@@ -98,7 +106,198 @@ function createPetWindow() {
     }
   });
 
+  petWindowBounds = petWindow.getBounds();
+  petWindow.webContents.on("did-finish-load", () => {
+    if (currentInterface === "harness") {
+      injectHarnessInterfaceToggle();
+      return;
+    }
+
+    try {
+      findHarnessRuntime();
+      petWindow.webContents.send("liang:status", `已连接 ${path.basename(getWorkspacePath())}，点人物开聊。`);
+    } catch (error) {
+      petWindow.webContents.send("liang:status", error.message);
+    }
+  });
   petWindow.loadFile(path.join(__dirname, "pet.html"));
+}
+
+async function isHarnessWebAvailable(url = HARNESS_WEB_URL) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 1500);
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) return false;
+    const html = await response.text();
+    return /deepseek/i.test(html) && /harness/i.test(html);
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function waitForHarnessWeb(child, getOutput) {
+  const startedAt = Date.now();
+  return new Promise((resolve, reject) => {
+    const check = async () => {
+      if (await isHarnessWebAvailable(HARNESS_WEB_URL)) {
+        resolve(HARNESS_WEB_URL);
+        return;
+      }
+      if (child.exitCode !== null || child.signalCode) {
+        reject(new Error(getOutput() || `Harness 完整界面启动失败，退出码：${child.exitCode ?? "未知"}`));
+        return;
+      }
+      if (Date.now() - startedAt >= HARNESS_WEB_START_TIMEOUT_MS) {
+        reject(new Error("Harness 完整界面启动超时。"));
+        return;
+      }
+      setTimeout(check, 300);
+    };
+    check();
+  });
+}
+
+async function startHarnessWebServer() {
+  if (harnessWebUrl && await isHarnessWebAvailable(harnessWebUrl)) return harnessWebUrl;
+  if (await isHarnessWebAvailable(HARNESS_WEB_URL)) {
+    harnessWebUrl = HARNESS_WEB_URL;
+    return harnessWebUrl;
+  }
+
+  const runtime = findHarnessRuntime();
+  const runtimeArguments = runtime.electronAsNode
+    ? ["--expose-internals", runtime.dshBin, "web", "--no-open", "--port", "3080"]
+    : [runtime.dshBin, "web", "--no-open", "--port", "3080"];
+  const child = spawn(runtime.nodeBin, runtimeArguments, {
+    cwd: getWorkspacePath(),
+    env: createHarnessEnvironment(runtime),
+    stdio: ["ignore", "pipe", "pipe"],
+    shell: false
+  });
+
+  harnessWebProcess = child;
+  let output = "";
+  const capture = (chunk) => {
+    output = (output + stripAnsi(chunk.toString())).slice(-4000);
+  };
+  child.stdout.on("data", capture);
+  child.stderr.on("data", capture);
+  child.once("close", () => {
+    if (harnessWebProcess === child) harnessWebProcess = null;
+    if (harnessWebUrl === HARNESS_WEB_URL) harnessWebUrl = "";
+  });
+
+  try {
+    harnessWebUrl = await waitForHarnessWeb(child, () => output.trim());
+    return harnessWebUrl;
+  } catch (error) {
+    if (!child.killed && child.exitCode === null) child.kill("SIGTERM");
+    throw error;
+  }
+}
+
+function ensureHarnessWebServer() {
+  if (!harnessWebStartPromise) {
+    harnessWebStartPromise = startHarnessWebServer().finally(() => {
+      harnessWebStartPromise = null;
+    });
+  }
+  return harnessWebStartPromise;
+}
+
+function getDefaultHarnessBounds() {
+  const workArea = screen.getDisplayMatching(petWindow.getBounds()).workArea;
+  const width = Math.max(640, Math.min(1280, workArea.width - 48));
+  const height = Math.max(520, Math.min(840, workArea.height - 48));
+  return {
+    width,
+    height,
+    x: Math.round(workArea.x + (workArea.width - width) / 2),
+    y: Math.round(workArea.y + (workArea.height - height) / 2)
+  };
+}
+
+async function showHarnessInterface(url) {
+  if (!petWindow || petWindow.isDestroyed()) return;
+  petWindowBounds = petWindow.getBounds();
+  currentInterface = "harness";
+  const bounds = harnessWindowBounds || getDefaultHarnessBounds();
+  petWindow.setMinimumSize(Math.min(900, bounds.width), Math.min(620, bounds.height));
+  petWindow.setBounds(bounds, true);
+  petWindow.setTitle("DeepSeek Harness Desktop");
+  petWindow.setHasShadow?.(true);
+  try {
+    await petWindow.loadURL(url);
+    petWindow.show();
+    petWindow.focus();
+  } catch (error) {
+    currentInterface = "pet";
+    await showPetInterface();
+    dialog.showErrorBox("Harness 完整界面启动失败", error.message);
+  }
+}
+
+async function showPetInterface() {
+  if (!petWindow || petWindow.isDestroyed()) return;
+  if (currentInterface === "harness") harnessWindowBounds = petWindow.getBounds();
+  currentInterface = "pet";
+  petWindow.setMinimumSize(460, 520);
+  if (petWindowBounds) petWindow.setBounds(petWindowBounds, true);
+  petWindow.setTitle("Liang Desktop Pet");
+  petWindow.setHasShadow?.(false);
+  await petWindow.loadFile(path.join(__dirname, "pet.html"));
+  petWindow.show();
+  petWindow.focus();
+}
+
+function injectHarnessInterfaceToggle() {
+  if (!petWindow || petWindow.isDestroyed()) return;
+  petWindow.webContents.executeJavaScript(`(() => {
+    if (document.getElementById("liang-interface-toggle-host")) return;
+    const host = document.createElement("div");
+    host.id = "liang-interface-toggle-host";
+    host.style.cssText = "position:fixed;left:24px;bottom:72px;z-index:2147483647;width:48px;height:48px;";
+    const root = host.attachShadow({ mode: "open" });
+    root.innerHTML = \`
+      <style>
+        button {
+          display: grid;
+          width: 48px;
+          height: 48px;
+          padding: 0;
+          place-items: center;
+          border: 1px solid rgba(255, 255, 255, 0.24);
+          border-radius: 50%;
+          outline: 0;
+          background: rgba(20, 23, 27, 0.88);
+          color: #f7f2e7;
+          box-shadow: 0 14px 30px rgba(0, 0, 0, 0.38);
+          font: 800 26px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          cursor: pointer;
+          backdrop-filter: blur(14px);
+          transition: transform 140ms ease, background 140ms ease;
+        }
+        button:hover { background: rgba(59, 130, 246, 0.94); transform: translateY(-1px); }
+        button:focus-visible { outline: 3px solid rgba(96, 165, 250, 0.72); outline-offset: 3px; }
+        button:disabled { cursor: wait; opacity: 0.68; }
+      </style>
+      <button type="button" aria-label="返回梁圣桌宠" title="返回梁圣桌宠">↶</button>
+    \`;
+    root.querySelector("button").addEventListener("click", async (event) => {
+      const button = event.currentTarget;
+      button.disabled = true;
+      try {
+        await window.liangPet?.toggleInterface();
+      } catch (error) {
+        button.disabled = false;
+        button.title = error?.message || "无法返回桌宠界面";
+      }
+    });
+    document.documentElement.appendChild(host);
+  })()`, true).catch(() => {});
 }
 
 function getSettingsFilePath() {
@@ -459,6 +658,19 @@ ipcMain.handle("liang:choose-workspace", async () => {
   return getPublicAppSettings();
 });
 
+ipcMain.handle("liang:toggle-interface", async () => {
+  if (currentInterface === "harness") {
+    setTimeout(() => showPetInterface().catch((error) => {
+      dialog.showErrorBox("桌宠界面恢复失败", error.message);
+    }), 0);
+    return { interface: "pet" };
+  }
+
+  const url = await ensureHarnessWebServer();
+  setTimeout(() => showHarnessInterface(url), 0);
+  return { interface: "harness" };
+});
+
 ipcMain.on("liang:stop-speaking", () => {
   stopSpeaking();
 });
@@ -499,19 +711,14 @@ app.whenReady().then(() => {
   app.setName("Liang Desktop Pet");
   loadAppSettings();
   createPetWindow();
-  petWindow.webContents.once("did-finish-load", () => {
-    try {
-      findHarnessRuntime();
-      petWindow.webContents.send("liang:status", `已连接 ${path.basename(getWorkspacePath())}，点人物开聊。`);
-    } catch (error) {
-      petWindow.webContents.send("liang:status", error.message);
-    }
-  });
 });
 
 app.on("before-quit", () => {
   if (harnessTaskProcess && !harnessTaskProcess.killed) {
     harnessTaskProcess.kill("SIGTERM");
+  }
+  if (harnessWebProcess && !harnessWebProcess.killed) {
+    harnessWebProcess.kill("SIGTERM");
   }
   stopSpeaking();
 });

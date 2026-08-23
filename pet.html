@@ -487,6 +487,43 @@
         color: white;
       }
 
+      .interface-toggle {
+        position: absolute;
+        left: 28px;
+        bottom: 44px;
+        z-index: 18;
+        display: grid;
+        width: 46px;
+        height: 46px;
+        padding: 0;
+        place-items: center;
+        border: 1px solid rgba(247, 242, 231, 0.24);
+        border-radius: 50%;
+        background: rgba(17, 19, 21, 0.78);
+        color: #f7f2e7;
+        font-size: 25px;
+        line-height: 1;
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.34);
+        cursor: pointer;
+        backdrop-filter: blur(14px);
+        transition: transform 140ms ease, background 140ms ease, top 160ms ease, bottom 160ms ease;
+      }
+
+      .interface-toggle:hover {
+        background: rgba(59, 130, 246, 0.94);
+        transform: translateY(-1px);
+      }
+
+      .interface-toggle:focus-visible {
+        outline: 3px solid rgba(96, 165, 250, 0.72);
+        outline-offset: 3px;
+      }
+
+      .app[data-open="true"] .interface-toggle {
+        top: 24px;
+        bottom: auto;
+      }
+
       .chat {
         position: absolute;
         left: 24px;
@@ -949,6 +986,7 @@
   </head>
   <body>
     <main class="app" id="app" data-open="false" data-thinking="false">
+      <button class="interface-toggle" id="restoreInterface" type="button" aria-label="还原 Harness 完整界面" title="还原 Harness 完整界面">↶</button>
       <section class="pet-wrap" aria-label="梁圣宠物">
         <button class="close-pet" id="closePet" aria-label="关闭梁圣桌宠" title="关闭">×</button>
         <div class="level-name" id="levelName" aria-live="polite">梁圣</div>
@@ -1057,6 +1095,7 @@
       const status = document.getElementById("status");
       const chat = document.querySelector(".chat");
       const closePet = document.getElementById("closePet");
+      const restoreInterface = document.getElementById("restoreInterface");
       const clearMessages = document.getElementById("clearMessages");
       const quickActions = document.querySelector(".quick-actions");
       const modeSegment = document.getElementById("modeSegment");
@@ -1291,6 +1330,24 @@
       closePet.addEventListener("click", (event) => {
         event.stopPropagation();
         window.liangPet?.closeApp();
+      });
+
+      restoreInterface.addEventListener("pointerdown", (event) => {
+        event.stopPropagation();
+        window.liangPet?.focusWindow();
+      });
+
+      restoreInterface.addEventListener("click", async (event) => {
+        event.stopPropagation();
+        if (restoreInterface.disabled) return;
+        restoreInterface.disabled = true;
+        status.textContent = "正在还原 Harness 完整界面…";
+        try {
+          await window.liangPet?.toggleInterface();
+        } catch (error) {
+          restoreInterface.disabled = false;
+          status.textContent = error.message || "无法打开 Harness 完整界面。";
+        }
       });
 
       quickActions.addEventListener("pointerdown", (event) => {
