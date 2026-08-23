@@ -49,9 +49,31 @@ jobs:
             dist/*.yaml
             dist/*.blockmap
 
+  plugin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: plugins/liang-harness-plugin/package-lock.json
+      - run: npm ci --legacy-peer-deps
+        working-directory: plugins/liang-harness-plugin
+      - run: mkdir -p release
+      - run: npm pack --pack-destination "$GITHUB_WORKSPACE/release"
+        working-directory: plugins/liang-harness-plugin
+      - run: cp plugins/liang-harness-plugin/MANUAL.zh-CN.md release/Liang-Harness-Plugin-Manual.zh-CN.md
+      - uses: actions/upload-artifact@v5
+        with:
+          name: dist-plugin
+          if-no-files-found: error
+          retention-days: 14
+          path: release/*
+
   release:
     if: startsWith(github.ref, 'refs/tags/')
-    needs: build
+    needs: [build, plugin]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v5

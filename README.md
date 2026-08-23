@@ -1,6 +1,6 @@
 # Liang Desktop Pet
 
-一个非官方的 DeepSeek Harness 桌面交互外壳。人物可拖动，点击后打开对话框，并支持会话管理、四种 Harness 模式、六档人物语气、思考摘要和在线神经语音。
+一个非官方的 DeepSeek Harness 人物交互项目，提供独立 Electron 桌面版和可直接安装到 Harness Web profile 的 Cordis 插件。人物可拖动，点击后打开对话框，并支持四种 Harness 模式、六档人物语气和公开思考摘要。
 
 ![应用截图](docs/screenshot.png)
 
@@ -11,7 +11,26 @@
 
 前往 [GitHub Releases](https://github.com/Flycat43/liang-desktop-pet/releases) 下载对应系统的安装包。首次打开未签名版本时，系统可能提示来源未知。
 
+- `liang-harness-plugin-*.tgz`：Harness 插件版，安装说明见 [插件中文说明书](plugins/liang-harness-plugin/MANUAL.zh-CN.md)。
+- `Liang Desktop Pet-*`：独立 Electron 桌面版。
+
+安装插件版：
+
+```bash
+npx @deepseek-ai/dsh plugin --profile web add /绝对路径/liang-harness-plugin-0.1.0.tgz
+npx @deepseek-ai/dsh web
+```
+
 ## 功能
+
+### Harness 插件版
+
+- 正式 `dsh.bundle` + `dsh.client` 插件包，安装后自动加入 web profile
+- 直接调用 Harness 当前会话服务发送任务和订阅输出
+- 在 Harness 页面内显示可拖动人物，不覆盖其他应用
+- 六档渐变人物、四种任务模式、公开思考摘要和系统语音朗读
+
+### Electron 桌面版
 
 - 透明无边框桌面窗口，不强制置顶
 - 左下角按钮可在人物桌宠与 Harness 完整界面之间双向切换
@@ -69,8 +88,8 @@ npm run dist:linux
 仓库包含 GitHub Actions。推送版本标签后会在三个系统上构建，并把安装包上传到 GitHub Releases：
 
 ```bash
-git tag v0.1.4
-git push origin v0.1.4
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
 默认构建未配置商业代码签名。macOS Gatekeeper 和 Windows SmartScreen 可能提示来源未知；正式分发时应配置 Apple Developer ID、公证和 Windows 代码签名证书。
@@ -78,7 +97,7 @@ git push origin v0.1.4
 ## 安全与隐私
 
 - Harness 可以执行命令并修改所选工作区。请优先使用有 Git 版本控制的目录。
-- 对话最终文本在开启朗读时会发送至在线 Microsoft Edge Read Aloud 服务生成语音。
+- Electron 桌面版在开启朗读时会把最终文本发送至 Microsoft Edge Read Aloud 服务；Harness 插件版使用浏览器系统语音，不新增语音服务请求。
 - 会话记录保存在 Electron 本地存储中，不会提交到仓库。
 
 ## 授权
