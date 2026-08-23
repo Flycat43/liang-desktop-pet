@@ -1,6 +1,6 @@
 {
   "name": "liang-desktop-pet",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "An unofficial desktop companion UI for DeepSeek Harness.",
   "license": "MIT",
@@ -66,8 +66,12 @@
       ]
     },
     "nsis": {
+      "artifactName": "${productName}-${version}-${os}-${arch}-setup.${ext}",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-${os}-${arch}-portable.${ext}"
     }
   }
 }

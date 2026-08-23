@@ -67,8 +67,8 @@ npm run dist:linux
 仓库包含 GitHub Actions。推送版本标签后会在三个系统上构建，并把安装包上传到 GitHub Releases：
 
 ```bash
-git tag v0.1.1
-git push origin v0.1.1
+git tag v0.1.2
+git push origin v0.1.2
 ```
 
 默认构建未配置商业代码签名。macOS Gatekeeper 和 Windows SmartScreen 可能提示来源未知；正式分发时应配置 Apple Developer ID、公证和 Windows 代码签名证书。
