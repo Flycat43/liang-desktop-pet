@@ -1,0 +1,32 @@
+name: Plugin Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "plugins/liang-harness-plugin/**"
+      - ".github/workflows/plugin-check.yml"
+  pull_request:
+    paths:
+      - "plugins/liang-harness-plugin/**"
+      - ".github/workflows/plugin-check.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: plugins/liang-harness-plugin
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: plugins/liang-harness-plugin/package-lock.json
+      - run: npm ci --legacy-peer-deps
+      - run: npm test
+      - run: npm pack --dry-run
