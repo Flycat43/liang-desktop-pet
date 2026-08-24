@@ -22,14 +22,17 @@ npx @deepseek-ai/dsh plugin --profile web add /绝对路径/liang-harness-plugin
 npx @deepseek-ai/dsh web
 ```
 
+市场收录信息、权限边界和可重复验证步骤见 [Marketplace and review notes](MARKETPLACE.md)。
+
 ## 开发
 
 ```bash
 npm ci --legacy-peer-deps
-npm run build
+npm test
+npm pack --dry-run
 ```
 
-`npm pack` 会在打包前自动重新构建 `lib/client.js`。
+`npm test` 会重新构建客户端并校验 manifest、Cordis patch、导出文件和六张人物素材；`npm pack` 会在打包前再次构建 `lib/client.js`。
 
 ## 边界
 

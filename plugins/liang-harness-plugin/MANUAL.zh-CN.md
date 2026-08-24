@@ -158,5 +158,9 @@ npx @deepseek-ai/dsh plugin --profile web remove liang-harness-plugin
 
 - 插件不新增远程服务；任务与输出仍通过你配置的 Harness 模型提供方处理。
 - 人物图片压缩后直接内嵌在插件 bundle 中，不从临时目录或第三方图片站加载。
+- 插件只读取当前 Harness 会话和公开输出，不注册文件或命令工具，也不尝试提取模型不可见的隐藏思维链。
+- 人物位置、档位、模式和朗读偏好保存在当前 Harness 站点的浏览器 `localStorage` 中。
 - Harness 可能执行命令并修改工作区，请使用有版本控制的目录并检查授权范围。
 - 源代码使用 MIT License；人物图像和人物相关权利不包含在 MIT 授权中，详见 `ASSETS_LICENSE.md`。
+
+面向插件市场维护者的安装源、权限表和验证命令见 `MARKETPLACE.md`。

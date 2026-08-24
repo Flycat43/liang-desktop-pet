@@ -14,6 +14,8 @@
 - `liang-harness-plugin-*.tgz`：Harness 插件版，安装说明见 [插件中文说明书](plugins/liang-harness-plugin/MANUAL.zh-CN.md)。
 - `Liang Desktop Pet-*`：独立 Electron 桌面版。
 
+插件市场维护者可查看 [安装源、权限边界与审核说明](plugins/liang-harness-plugin/MARKETPLACE.md)。
+
 安装插件版：
 
 ```bash
