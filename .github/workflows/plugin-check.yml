@@ -5,11 +5,17 @@ on:
     branches: [main]
     paths:
       - "plugins/liang-harness-plugin/**"
+      - "scripts/prepare-plugin-release.mjs"
+      - "package.json"
       - ".github/workflows/plugin-check.yml"
+      - ".github/workflows/release.yml"
   pull_request:
     paths:
       - "plugins/liang-harness-plugin/**"
+      - "scripts/prepare-plugin-release.mjs"
+      - "package.json"
       - ".github/workflows/plugin-check.yml"
+      - ".github/workflows/release.yml"
 
 permissions:
   contents: read
@@ -30,3 +36,7 @@ jobs:
       - run: npm ci --legacy-peer-deps
       - run: npm test
       - run: npm pack --dry-run
+      - run: mkdir -p "$RUNNER_TEMP/liang-plugin-release"
+      - run: npm pack --pack-destination "$RUNNER_TEMP/liang-plugin-release"
+      - run: npm run release:plugin:prepare -- "$RUNNER_TEMP/liang-plugin-release"
+        working-directory: .

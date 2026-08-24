@@ -9,6 +9,8 @@ This document records the install source, capability boundaries and reproducible
 - Package name: `liang-harness-plugin`
 - Profile: `web`
 - Prebuilt package: GitHub Release `.tgz`
+- Stable tarball: `https://github.com/Flycat43/liang-desktop-pet/releases/latest/download/liang-harness-plugin.tgz`
+- Checksums: `https://github.com/Flycat43/liang-desktop-pet/releases/latest/download/SHA256SUMS-plugin.txt`
 
 The repository is a monorepo. Review and installation should target this plugin subdirectory rather than the Electron application at the repository root.
 

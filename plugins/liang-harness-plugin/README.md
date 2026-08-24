@@ -15,10 +15,10 @@
 
 ## 安装
 
-完整步骤见 [中文说明书](MANUAL.zh-CN.md)。下载 Release 中的 `liang-harness-plugin-*.tgz` 后执行：
+完整步骤见 [中文说明书](MANUAL.zh-CN.md)。下载 Release 中的固定名称插件包 [`liang-harness-plugin.tgz`](https://github.com/Flycat43/liang-desktop-pet/releases/latest/download/liang-harness-plugin.tgz) 后执行：
 
 ```bash
-npx @deepseek-ai/dsh plugin --profile web add /绝对路径/liang-harness-plugin-0.1.0.tgz
+npx @deepseek-ai/dsh plugin --profile web add /绝对路径/liang-harness-plugin.tgz
 npx @deepseek-ai/dsh web
 ```
 

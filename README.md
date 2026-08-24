@@ -11,15 +11,17 @@
 
 前往 [GitHub Releases](https://github.com/Flycat43/liang-desktop-pet/releases) 下载对应系统的安装包。首次打开未签名版本时，系统可能提示来源未知。
 
-- `liang-harness-plugin-*.tgz`：Harness 插件版，安装说明见 [插件中文说明书](plugins/liang-harness-plugin/MANUAL.zh-CN.md)。
+- [`liang-harness-plugin.tgz`](https://github.com/Flycat43/liang-desktop-pet/releases/latest/download/liang-harness-plugin.tgz)：Harness 插件版的固定下载地址，安装说明见 [插件中文说明书](plugins/liang-harness-plugin/MANUAL.zh-CN.md)。
 - `Liang Desktop Pet-*`：独立 Electron 桌面版。
+
+每次发布还会附带 `SHA256SUMS-plugin.txt`，用于校验插件包与中文说明书。
 
 插件市场维护者可查看 [安装源、权限边界与审核说明](plugins/liang-harness-plugin/MARKETPLACE.md)。
 
 安装插件版：
 
 ```bash
-npx @deepseek-ai/dsh plugin --profile web add /绝对路径/liang-harness-plugin-0.1.0.tgz
+npx @deepseek-ai/dsh plugin --profile web add /绝对路径/liang-harness-plugin.tgz
 npx @deepseek-ai/dsh web
 ```
 
@@ -87,7 +89,7 @@ npm run dist:linux
 
 ## 自动发布
 
-仓库包含 GitHub Actions。推送版本标签后会在三个系统上构建，并把安装包上传到 GitHub Releases：
+仓库包含 GitHub Actions。推送版本标签后会在三个系统上构建，并把安装包、固定名称插件包和 SHA-256 校验文件上传到 GitHub Releases：
 
 ```bash
 git tag v0.2.0

@@ -22,20 +22,19 @@
 
 ### 3.1 下载
 
-从项目的 [GitHub Releases](https://github.com/Flycat43/liang-desktop-pet/releases) 下载：
+从项目的 [GitHub Releases](https://github.com/Flycat43/liang-desktop-pet/releases) 下载，或直接使用固定下载地址：
 
-```text
-liang-harness-plugin-0.1.0.tgz
-```
+- [`liang-harness-plugin.tgz`](https://github.com/Flycat43/liang-desktop-pet/releases/latest/download/liang-harness-plugin.tgz)
+- [`SHA256SUMS-plugin.txt`](https://github.com/Flycat43/liang-desktop-pet/releases/latest/download/SHA256SUMS-plugin.txt)
 
-不要解压 `.tgz`。
+不要解压 `.tgz`。需要核验下载内容时，在文件所在目录执行 `shasum -a 256 liang-harness-plugin.tgz`，并与校验文件中的值比较。
 
 ### 3.2 安装到 Web profile
 
 打开终端，把下面路径替换成文件的实际绝对路径：
 
 ```bash
-npx @deepseek-ai/dsh plugin --profile web add /绝对路径/liang-harness-plugin-0.1.0.tgz
+npx @deepseek-ai/dsh plugin --profile web add /绝对路径/liang-harness-plugin.tgz
 ```
 
 插件包声明了 `dsh.bundle.patch`。安装成功后，Harness 会自动把它加入 web profile 的 bundle 列表，无需手改配置文件。

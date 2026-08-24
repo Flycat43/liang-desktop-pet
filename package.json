@@ -19,6 +19,7 @@
     "dist:mac": "electron-builder --mac --publish never",
     "dist:win": "electron-builder --win --publish never",
     "dist:linux": "electron-builder --linux --publish never",
+    "release:plugin:prepare": "node scripts/prepare-plugin-release.mjs",
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {

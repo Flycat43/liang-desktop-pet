@@ -63,7 +63,7 @@ jobs:
       - run: mkdir -p release
       - run: npm pack --pack-destination "$GITHUB_WORKSPACE/release"
         working-directory: plugins/liang-harness-plugin
-      - run: cp plugins/liang-harness-plugin/MANUAL.zh-CN.md release/Liang-Harness-Plugin-Manual.zh-CN.md
+      - run: npm run release:plugin:prepare -- "$GITHUB_WORKSPACE/release"
       - uses: actions/upload-artifact@v5
         with:
           name: dist-plugin
